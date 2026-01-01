@@ -43,7 +43,8 @@ struct ForkFilteringTests {
                 hidden: [],
                 includeForks: false,
                 includeArchived: false,
-                limit: 10
+                limit: 10,
+                ownerFilter: []
             )
         )
 

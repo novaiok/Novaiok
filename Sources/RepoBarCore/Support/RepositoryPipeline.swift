@@ -17,6 +17,7 @@ public struct RepositoryQuery: Equatable, Sendable {
     public var pinned: [String]
     public var hidden: Set<String>
     public var pinPriority: Bool
+    public var ownerFilter: [String]
 
     public init(
         scope: RepositoryScope = .all,
@@ -28,7 +29,8 @@ public struct RepositoryQuery: Equatable, Sendable {
         ageCutoff: Date? = nil,
         pinned: [String] = [],
         hidden: Set<String> = [],
-        pinPriority: Bool = false
+        pinPriority: Bool = false,
+        ownerFilter: [String] = []
     ) {
         self.scope = scope
         self.onlyWith = onlyWith
@@ -40,6 +42,7 @@ public struct RepositoryQuery: Equatable, Sendable {
         self.pinned = pinned
         self.hidden = hidden
         self.pinPriority = pinPriority
+        self.ownerFilter = ownerFilter
     }
 }
 
@@ -74,7 +77,8 @@ public enum RepositoryPipeline {
             filtered,
             includeForks: query.includeForks,
             includeArchived: query.includeArchived,
-            pinned: pinnedSet
+            pinned: pinnedSet,
+            ownerFilter: query.ownerFilter
         )
 
         if let cutoff = query.ageCutoff {
