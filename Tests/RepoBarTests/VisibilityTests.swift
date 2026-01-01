@@ -17,7 +17,8 @@ struct VisibilityTests {
                 hidden: Set(["me/b"]),
                 includeForks: false,
                 includeArchived: false,
-                limit: 5
+                limit: 5,
+                ownerFilter: []
             )
         )
         #expect(visible.count == 1)
@@ -37,7 +38,8 @@ struct VisibilityTests {
                 hidden: [],
                 includeForks: false,
                 includeArchived: false,
-                limit: 5
+                limit: 5,
+                ownerFilter: []
             )
         )
         #expect(visible.first?.fullName == "me/a")
@@ -55,7 +57,8 @@ struct VisibilityTests {
                 hidden: Set(["me/r1", "me/r2", "me/r3"]),
                 includeForks: false,
                 includeArchived: false,
-                limit: 3
+                limit: 3,
+                ownerFilter: []
             )
         )
         #expect(visible.count == 3)
