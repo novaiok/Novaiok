@@ -6,6 +6,34 @@ struct GeneralSettingsView: View {
     @Bindable var session: Session
     let appState: AppState
 
+    private var showOnlyMyRepos: Bool {
+        guard let username = self.currentUsername() else { return false }
+        return self.session.settings.repoList.ownerFilter.contains(username.lowercased())
+    }
+
+    private func currentUsername() -> String? {
+        if case let .loggedIn(user) = self.session.account {
+            return user.username
+        }
+        return nil
+    }
+
+    private func toggleShowOnlyMyRepos(_ enabled: Bool) {
+        guard let username = self.currentUsername() else { return }
+        let normalizedUsername = username.lowercased()
+
+        if enabled {
+            if !self.session.settings.repoList.ownerFilter.contains(normalizedUsername) {
+                self.session.settings.repoList.ownerFilter = [normalizedUsername]
+            }
+        } else {
+            self.session.settings.repoList.ownerFilter.removeAll { $0.lowercased() == normalizedUsername }
+        }
+
+        self.appState.persistSettings()
+        self.appState.requestRefresh(cancelInFlight: true)
+    }
+
     var body: some View {
         VStack(spacing: 12) {
             Form {
@@ -78,10 +106,14 @@ struct GeneralSettingsView: View {
                             self.appState.persistSettings()
                             self.appState.requestRefresh(cancelInFlight: true)
                         }
+                    Toggle("Show only my repositories", isOn: Binding(
+                        get: { self.showOnlyMyRepos },
+                        set: { self.toggleShowOnlyMyRepos($0) }
+                    ))
                 } header: {
                     Text("Repositories")
                 } footer: {
-                    Text("Filters apply to repo lists and search.")
+                    Text("Filters apply to repo lists and search. 'Show only my repositories' hides repos from organizations.")
                 }
             }
             .formStyle(.grouped)

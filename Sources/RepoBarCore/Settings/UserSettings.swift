@@ -33,6 +33,7 @@ public struct RepoListSettings: Equatable, Codable {
     public var menuSortKey: RepositorySortKey = .activity
     public var pinnedRepositories: [String] = [] // owner/name
     public var hiddenRepositories: [String] = [] // owner/name
+    public var ownerFilter: [String] = [] // owner names to include (empty = show all)
 
     public init() {}
 }

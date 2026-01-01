@@ -20,7 +20,8 @@ extension AppState {
             hidden: Set(self.session.settings.repoList.hiddenRepositories),
             includeForks: self.session.settings.repoList.showForks,
             includeArchived: self.session.settings.repoList.showArchived,
-            limit: Int.max
+            limit: Int.max,
+            ownerFilter: self.session.settings.repoList.ownerFilter
         )
         return AppState.selectVisible(all: repos, options: options)
     }
@@ -47,7 +48,8 @@ extension AppState {
             ageCutoff: ageCutoff,
             pinned: settings.repoList.pinnedRepositories,
             hidden: Set(settings.repoList.hiddenRepositories),
-            pinPriority: true
+            pinPriority: true,
+            ownerFilter: settings.repoList.ownerFilter
         )
     }
 
@@ -119,6 +121,7 @@ extension AppState {
         let includeForks: Bool
         let includeArchived: Bool
         let limit: Int
+        let ownerFilter: [String]
     }
 
     nonisolated static func selectVisible(all repos: [Repository], options: VisibleSelectionOptions) -> [Repository] {
@@ -128,7 +131,8 @@ extension AppState {
             filtered,
             includeForks: options.includeForks,
             includeArchived: options.includeArchived,
-            pinned: pinnedSet
+            pinned: pinnedSet,
+            ownerFilter: options.ownerFilter
         )
         let limited = Array(visible.prefix(max(options.limit, 0)))
         return limited.sorted { lhs, rhs in
