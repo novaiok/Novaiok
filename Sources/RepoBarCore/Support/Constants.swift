@@ -10,7 +10,9 @@ public enum RepoCacheConstants {
 }
 
 public enum LocalProjectsConstants {
-    public static let defaultMaxDepth: Int = 2
+    // Allow ghq-style layouts (e.g. ~/ghq/github.com/owner/repo) which sit 3–4 levels
+    // below the configured root path.
+    public static let defaultMaxDepth: Int = 4
     public static let defaultSnapshotConcurrencyLimit: Int = 8
     public static let dirtyFileLimit: Int = 10
 }
