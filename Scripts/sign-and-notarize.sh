@@ -52,7 +52,7 @@ if [[ -z "$APP_BUNDLE" ]]; then
 fi
 
 echo "Signing with $APP_IDENTITY"
-export REPOBAR_SKIP_KEYCHAIN_GROUPS="${REPOBAR_SKIP_KEYCHAIN_GROUPS:-1}"
+export REPOBAR_SKIP_KEYCHAIN_GROUPS="${REPOBAR_SKIP_KEYCHAIN_GROUPS:-0}"
 ./Scripts/codesign_app.sh "$APP_BUNDLE" "$APP_IDENTITY"
 
 DITTO_BIN=${DITTO_BIN:-/usr/bin/ditto}

@@ -133,6 +133,7 @@ _Last updated: 2025-11-24_
 
 ## Security & Privacy
 - Tokens and secrets only in Keychain; never log.
+- App + CLI share tokens via Keychain access group; release builds must include `keychain-access-groups` entitlement.
 - TLS required (no ATS exceptions); reject self-signed for GHE.
 - Minimal scopes; per-installation tokens only.
 - Single-instance enforced via Info.plist.

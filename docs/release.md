@@ -20,6 +20,7 @@ read_when:
    - About → “Check for Updates…”
    - Menu only shows “Update ready, restart now?” once the update is downloaded.
    - Sparkle dialog shows formatted release notes (not escaped HTML).
+   - Verify entitlements include `keychain-access-groups` for both app + CLI (login depends on shared Keychain).
 
 ## Manual steps (only when re-running pieces)
 1) Debug smoke build/tests  
