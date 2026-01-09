@@ -1,11 +1,27 @@
 import Foundation
 import Network
 
+/// Error thrown when the loopback server cannot start.
+public enum LoopbackServerError: LocalizedError {
+    case portInUse(port: Int)
+    case bindFailed(port: Int, underlying: Error)
+
+    public var errorDescription: String? {
+        switch self {
+        case .portInUse(let port):
+            return "Port \(port) is already in use. This may be caused by a previous login attempt that didn't complete. Try again in a few seconds, or specify a different port with --loopback-port."
+        case .bindFailed(let port, let underlying):
+            return "Failed to bind to port \(port): \(underlying.localizedDescription)"
+        }
+    }
+}
+
 /// Minimal one-shot HTTP loopback listener to capture OAuth redirects.
 @MainActor
 public final class LoopbackServer {
     private let port: UInt16
     private var listener: NWListener?
+    private var actualPort: UInt16?
     private var continuation: CheckedContinuation<(code: String, state: String), Error>?
     private var pendingResult: (code: String, state: String)?
 
@@ -14,8 +30,20 @@ public final class LoopbackServer {
     }
 
     public func start() throws -> URL {
-        let listener = try NWListener(using: .tcp, on: NWEndpoint.Port(rawValue: self.port)!)
+        // Check if port is available before attempting to bind
+        if Self.isPortInUse(Int(self.port)) {
+            throw LoopbackServerError.portInUse(port: Int(self.port))
+        }
+
+        let listener: NWListener
+        do {
+            listener = try NWListener(using: .tcp, on: NWEndpoint.Port(rawValue: self.port)!)
+        } catch {
+            throw LoopbackServerError.bindFailed(port: Int(self.port), underlying: error)
+        }
+
         self.listener = listener
+        self.actualPort = self.port
         listener.newConnectionHandler = { [weak self] connection in
             Task { @MainActor [weak self] in
                 self?.handle(connection: connection)
@@ -23,6 +51,29 @@ public final class LoopbackServer {
         }
         listener.start(queue: .main)
         return URL(string: "http://127.0.0.1:\(self.port)/callback")!
+    }
+
+    /// Checks if a port is currently in use by attempting a quick connection test.
+    private nonisolated static func isPortInUse(_ port: Int) -> Bool {
+        var addr = sockaddr_in()
+        addr.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
+        addr.sin_family = sa_family_t(AF_INET)
+        addr.sin_port = UInt16(port).bigEndian
+        addr.sin_addr.s_addr = inet_addr("127.0.0.1")
+
+        let sock = socket(AF_INET, SOCK_STREAM, 0)
+        guard sock >= 0 else { return false }
+        defer { close(sock) }
+
+        var reuse: Int32 = 1
+        setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuse, socklen_t(MemoryLayout<Int32>.size))
+
+        let bindResult = withUnsafePointer(to: &addr) { ptr in
+            ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockPtr in
+                bind(sock, sockPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
+            }
+        }
+        return bindResult != 0
     }
 
     public func waitForCallback(timeout: TimeInterval = 180) async throws -> (code: String, state: String) {
