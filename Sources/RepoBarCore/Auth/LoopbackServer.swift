@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 import Network
 
@@ -9,7 +10,7 @@ public enum LoopbackServerError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .portInUse(let port):
-            return "Port \(port) is already in use. This may be caused by a previous login attempt that didn't complete. Try again in a few seconds, or specify a different port with --loopback-port."
+            return "Port \(port) is already in use. This may be caused by a previous login attempt that didn't complete. Try again in a few seconds or choose a different port."
         case .bindFailed(let port, let underlying):
             return "Failed to bind to port \(port): \(underlying.localizedDescription)"
         }
@@ -21,7 +22,6 @@ public enum LoopbackServerError: LocalizedError {
 public final class LoopbackServer {
     private let port: UInt16
     private var listener: NWListener?
-    private var actualPort: UInt16?
     private var continuation: CheckedContinuation<(code: String, state: String), Error>?
     private var pendingResult: (code: String, state: String)?
 
@@ -43,7 +43,6 @@ public final class LoopbackServer {
         }
 
         self.listener = listener
-        self.actualPort = self.port
         listener.newConnectionHandler = { [weak self] connection in
             Task { @MainActor [weak self] in
                 self?.handle(connection: connection)
@@ -53,7 +52,7 @@ public final class LoopbackServer {
         return URL(string: "http://127.0.0.1:\(self.port)/callback")!
     }
 
-    /// Checks if a port is currently in use by attempting a quick connection test.
+    /// Checks if a port is currently in use by attempting a connection.
     private nonisolated static func isPortInUse(_ port: Int) -> Bool {
         var addr = sockaddr_in()
         addr.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
@@ -65,15 +64,12 @@ public final class LoopbackServer {
         guard sock >= 0 else { return false }
         defer { close(sock) }
 
-        var reuse: Int32 = 1
-        setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuse, socklen_t(MemoryLayout<Int32>.size))
-
-        let bindResult = withUnsafePointer(to: &addr) { ptr in
+        let connectResult = withUnsafePointer(to: &addr) { ptr in
             ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockPtr in
-                bind(sock, sockPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
+                connect(sock, sockPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
             }
         }
-        return bindResult != 0
+        return connectResult == 0
     }
 
     public func waitForCallback(timeout: TimeInterval = 180) async throws -> (code: String, state: String) {

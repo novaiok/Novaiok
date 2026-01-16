@@ -14,6 +14,7 @@
 - macOS: widen Enterprise Base URL field and shrink auth progress indicators to avoid layout jumps.
 - iOS: update app icon + logo assets.
 - macOS: derive activity commit links from repo URL when event repo name is missing or malformed.
+- macOS: surface a clear error when the OAuth loopback port is already in use (#17, thanks @kiranjd).
 
 ## 0.1.2 - 2025-12-31
 

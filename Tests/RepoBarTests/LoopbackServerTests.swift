@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 @testable import RepoBarCore
 import Testing
@@ -59,6 +60,29 @@ struct LoopbackServerTests {
             #expect(error.code == .timedOut)
         }
     }
+
+    @Test
+    @MainActor
+    func startThrowsPortInUse() async throws {
+        let (port, socket) = try Self.reservePort()
+        defer { close(socket) }
+
+        let other = LoopbackServer(port: port)
+        do {
+            _ = try other.start()
+            defer { other.stop() }
+            Issue.record("Expected port in use error")
+        } catch let error as LoopbackServerError {
+            switch error {
+            case .portInUse(let errorPort):
+                #expect(errorPort == port)
+            case .bindFailed:
+                Issue.record("Expected portInUse error")
+            }
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+    }
 }
 
 private extension LoopbackServerTests {
@@ -77,5 +101,45 @@ private extension LoopbackServerTests {
             }
         }
         throw lastError ?? URLError(.cannotConnectToHost)
+    }
+
+    static func reservePort() throws -> (port: Int, socket: Int32) {
+        let sock = socket(AF_INET, SOCK_STREAM, 0)
+        guard sock >= 0 else {
+            throw POSIXError(.EBADF)
+        }
+
+        var addr = sockaddr_in()
+        addr.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
+        addr.sin_family = sa_family_t(AF_INET)
+        addr.sin_port = 0
+        addr.sin_addr.s_addr = inet_addr("127.0.0.1")
+
+        let bindResult = withUnsafePointer(to: &addr) { ptr in
+            ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockPtr in
+                bind(sock, sockPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
+            }
+        }
+        if bindResult != 0 {
+            close(sock)
+            throw POSIXError(.EADDRINUSE)
+        }
+
+        _ = listen(sock, 1)
+
+        var len = socklen_t(MemoryLayout<sockaddr_in>.size)
+        var boundAddr = sockaddr_in()
+        let nameResult = withUnsafeMutablePointer(to: &boundAddr) { ptr in
+            ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockPtr in
+                getsockname(sock, sockPtr, &len)
+            }
+        }
+        if nameResult != 0 {
+            close(sock)
+            throw POSIXError(.EINVAL)
+        }
+
+        let port = Int(UInt16(bigEndian: boundAddr.sin_port))
+        return (port, sock)
     }
 }
