@@ -257,6 +257,7 @@ enum HelpTarget: String {
     case settingsSet
     case login
     case logout
+    case importGHToken
     case status
 
     static func from(argv: [String]) -> HelpTarget? {
@@ -341,6 +342,8 @@ enum HelpTarget: String {
             return .login
         case LogoutCommand.commandName:
             return .logout
+        case ImportGHTokenCommand.commandName:
+            return .importGHToken
         case StatusCommand.commandName:
             return .status
         default:
@@ -389,6 +392,7 @@ func printHelp(_ target: HelpTarget) {
           repobar settings set <key> <value> [--json] [--plain]
           repobar login [--host URL] [--client-id ID] [--client-secret SECRET] [--loopback-port PORT]
           repobar logout
+          repobar import-gh-token
           repobar status [--json]
 
         Options:
@@ -826,6 +830,22 @@ func printHelp(_ target: HelpTarget) {
 
         Usage:
           repobar logout
+        """
+    case .importGHToken:
+        """
+        repobar import-gh-token - import token from GitHub CLI (gh)
+
+        Usage:
+          repobar import-gh-token
+
+        Imports the authentication token from GitHub CLI (gh) into RepoBar.
+        This is useful for SSO-enabled organizations where you've already
+        authorized the gh CLI but need to use that same access in RepoBar.
+
+        Prerequisites:
+          - GitHub CLI must be installed (brew install gh)
+          - You must be logged in via gh (gh auth login)
+          - Your gh token should have SSO authorization for your org
         """
     case .status:
         """

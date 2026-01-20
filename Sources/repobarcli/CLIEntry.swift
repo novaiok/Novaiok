@@ -68,6 +68,7 @@ enum RepoBarCLI {
         SettingsSetCommand.commandName: SettingsSetCommand.self,
         LoginCommand.commandName: LoginCommand.self,
         LogoutCommand.commandName: LogoutCommand.self,
+        ImportGHTokenCommand.commandName: ImportGHTokenCommand.self,
         StatusCommand.commandName: StatusCommand.self
     ]
 

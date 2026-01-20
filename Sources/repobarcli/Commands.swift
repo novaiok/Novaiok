@@ -44,6 +44,7 @@ struct RepoBarRoot: ParsableCommand {
                 SettingsSetCommand.self,
                 LoginCommand.self,
                 LogoutCommand.self,
+                ImportGHTokenCommand.self,
                 StatusCommand.self
             ],
             defaultSubcommand: ReposCommand.self
@@ -428,6 +429,60 @@ struct LogoutCommand: CommanderRunnableCommand {
     mutating func run() async throws {
         TokenStore.shared.clear()
         print("Logged out.")
+    }
+}
+
+@MainActor
+struct ImportGHTokenCommand: CommanderRunnableCommand {
+    nonisolated static let commandName = "import-gh-token"
+
+    static var commandDescription: CommandDescription {
+        CommandDescription(
+            commandName: commandName,
+            abstract: "Import token from GitHub CLI (gh) for SSO-enabled orgs"
+        )
+    }
+
+    mutating func bind(_: ParsedValues) throws {}
+
+    mutating func run() async throws {
+        // Get token from gh CLI
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = ["gh", "auth", "token"]
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = FileHandle.nullDevice
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+        } catch {
+            throw ValidationError("Failed to run 'gh auth token'. Is GitHub CLI installed?")
+        }
+
+        guard process.terminationStatus == 0 else {
+            throw ValidationError("'gh auth token' failed. Please run 'gh auth login' first.")
+        }
+
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        guard let tokenString = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !tokenString.isEmpty else {
+            throw ValidationError("No token returned from gh CLI. Please run 'gh auth login' first.")
+        }
+
+        // Create tokens with 1-year expiry (gh tokens don't expire but we need a value)
+        let oneYearFromNow = Date().addingTimeInterval(365 * 24 * 60 * 60)
+        let tokens = OAuthTokens(
+            accessToken: tokenString,
+            refreshToken: "",
+            expiresAt: oneYearFromNow
+        )
+
+        try TokenStore.shared.save(tokens: tokens)
+        print("Successfully imported gh CLI token.")
+        print("Token expires: \(RelativeFormatter.string(from: oneYearFromNow, relativeTo: Date()))")
+        print("\nNote: Re-run this command if your gh token changes or if you re-authenticate with 'gh auth login'.")
     }
 }
 
