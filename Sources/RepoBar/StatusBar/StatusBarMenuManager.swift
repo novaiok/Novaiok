@@ -71,6 +71,15 @@ final class StatusBarMenuManager: NSObject, NSMenuDelegate {
         self.logMenuEvent("attachMainMenu statusItem=\(self.objectID(statusItem)) menuItems=\(menu.items.count)")
     }
 
+    /// Re-opens the menu after an action to keep it visible.
+    /// Call this from actions like hide/pin/unpin that shouldn't close the menu.
+    func reopenMenuAfterAction() {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(50))
+            self.statusItem?.button?.performClick(nil)
+        }
+    }
+
     // MARK: - Menu actions
 
     @objc func refreshNow() {
