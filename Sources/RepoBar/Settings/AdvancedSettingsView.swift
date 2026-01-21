@@ -106,6 +106,24 @@ struct AdvancedSettingsView: View {
                 }
 
                 HStack {
+                    Text("Scan depth")
+                    Spacer()
+                    Picker("", selection: self.$session.settings.localProjects.maxDepth) {
+                        ForEach(1...6, id: \.self) { depth in
+                            Text("\(depth) level\(depth == 1 ? "" : "s")")
+                                .tag(depth)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                    .disabled(self.session.settings.localProjects.rootPath == nil)
+                    .onChange(of: self.session.settings.localProjects.maxDepth) { _, _ in
+                        self.appState.persistSettings()
+                        self.appState.refreshLocalProjects(forceRescan: true)
+                    }
+                }
+
+                HStack {
                     Text("Preferred Terminal")
                     Spacer()
                     Picker("", selection: self.preferredTerminalBinding) {
@@ -142,7 +160,7 @@ struct AdvancedSettingsView: View {
             } header: {
                 Text("Local Projects")
             } footer: {
-                Text("Scans two levels deep under the folder, fetches periodically, and can fast-forward pull clean repos.")
+                Text("Scans up to the configured depth under the folder, fetches periodically, and can fast-forward pull clean repos.")
             }
 
             Section {

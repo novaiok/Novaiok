@@ -21,6 +21,7 @@ actor LocalRepoManager {
         let preferredPathsByFullName: [String: String]
         let matchRepoNames: Set<String>
         let forceRescan: Bool
+        let maxDepth: Int
     }
 
     func snapshot(
@@ -60,7 +61,8 @@ actor LocalRepoManager {
             rootURL: rootURL,
             resolvedRoot: resolvedRoot,
             now: now,
-            forceRescan: options.forceRescan
+            forceRescan: options.forceRescan,
+            maxDepth: options.maxDepth
         )
 
         let (cachedStatuses, refreshRoots) = self.partitionStatusesToRefresh(
@@ -127,7 +129,8 @@ actor LocalRepoManager {
         rootURL: URL,
         resolvedRoot: String,
         now: Date,
-        forceRescan: Bool
+        forceRescan: Bool,
+        maxDepth: Int
     ) -> [URL] {
         if forceRescan == false, let cached = self.discoveryCache[resolvedRoot] {
             if now.timeIntervalSince(cached.discoveredAt) < self.discoveryCacheTTL { return cached.repoRoots }
@@ -135,7 +138,7 @@ actor LocalRepoManager {
 
         let roots = LocalProjectsService().discoverRepoRoots(
             rootURL: rootURL,
-            maxDepth: LocalProjectsConstants.defaultMaxDepth
+            maxDepth: max(1, maxDepth)
         )
         self.discoveryCache[resolvedRoot] = DiscoveryCacheEntry(repoRoots: roots, discoveredAt: now)
         return roots

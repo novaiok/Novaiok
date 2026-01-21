@@ -53,6 +53,7 @@ public struct LocalProjectsSettings: Equatable, Codable {
     public var autoSyncEnabled: Bool = true
     public var showDirtyFilesInMenu: Bool = false
     public var fetchInterval: LocalProjectsRefreshInterval = .fiveMinutes
+    public var maxDepth: Int = LocalProjectsConstants.defaultMaxDepth
     public var worktreeFolderName: String = ".work"
     public var preferredTerminal: String?
     public var ghosttyOpenMode: GhosttyOpenMode = .tab

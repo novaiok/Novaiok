@@ -19,6 +19,7 @@ Goal: map a local “project folder” (e.g. `~/Projects`) to GitHub repos shown
 - **Auto-sync clean repos**: when enabled, attempts `git pull --ff-only` on eligible repos.
 - **Show dirty files in menu**: shows up to 3 dirty files inline in the main menu (repo card).
 - **Fetch interval**: controls how often RepoBar runs `git fetch --prune` to refresh upstream state.
+- **Scan depth**: how many folder levels to traverse under the root (default 4).
 - **Worktree folder**: default subfolder used for new worktrees (defaults to `.work` inside the repo).
 - **Preferred Terminal**: choose terminal app for “Open in Terminal” actions (defaults to Ghostty if installed, else Terminal.app).
   - Ghostty opens a new window via AppleScript; macOS will prompt for Automation/System Events access.
@@ -37,7 +38,7 @@ Goal: map a local “project folder” (e.g. `~/Projects`) to GitHub repos shown
 ## Scanning & Matching
 
 ### Discovery
-- Scan the selected folder **two levels deep** (default).
+- Scan the selected folder up to the configured depth (**default 4 levels**).
 - A directory counts as a git repo if it contains `.git` (file or folder).
 - Skip hidden directories and symlinks.
 
@@ -82,5 +83,5 @@ If bookmark is missing/stale: show “0 repos” until user re-chooses the folde
 ## CLI Debugging
 
 Use the CLI to validate discovery without launching the app:
-- `repobar local --root ~/Projects --depth 2`
-- `repobar local --root ~/Projects --depth 2 --sync`
+- `repobar local --root ~/Projects --depth 4`
+- `repobar local --root ~/Projects --depth 4 --sync`

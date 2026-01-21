@@ -74,7 +74,8 @@ extension AppState {
                         fetchInterval: localSettings.fetchInterval.seconds,
                         preferredPathsByFullName: localSettings.preferredLocalPathsByFullName,
                         matchRepoNames: matchNames,
-                        forceRescan: false
+                        forceRescan: false,
+                        maxDepth: localSettings.maxDepth
                     )
                 )
             }
@@ -164,7 +165,8 @@ extension AppState {
                     fetchInterval: settings.fetchInterval.seconds,
                     preferredPathsByFullName: settings.preferredLocalPathsByFullName,
                     matchRepoNames: matchNames,
-                    forceRescan: forceRescan
+                    forceRescan: forceRescan,
+                    maxDepth: settings.maxDepth
                 )
             )
             await MainActor.run {
@@ -225,7 +227,8 @@ extension AppState {
                 fetchInterval: localSettings.fetchInterval.seconds,
                 preferredPathsByFullName: localSettings.preferredLocalPathsByFullName,
                 matchRepoNames: matchNames,
-                forceRescan: false
+                forceRescan: false,
+                maxDepth: localSettings.maxDepth
             )
         )
     }
