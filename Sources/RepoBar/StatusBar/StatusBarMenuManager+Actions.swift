@@ -215,30 +215,30 @@ extension StatusBarMenuManager {
 
     @objc func pinRepo(_ sender: NSMenuItem) {
         guard let fullName = self.repoFullName(from: sender) else { return }
+        self.requestMenuReopenAfterClose()
         Task { await self.appState.addPinned(fullName) }
-        self.reopenMenuAfterAction()
     }
 
     @objc func unpinRepo(_ sender: NSMenuItem) {
         guard let fullName = self.repoFullName(from: sender) else { return }
+        self.requestMenuReopenAfterClose()
         Task { await self.appState.removePinned(fullName) }
-        self.reopenMenuAfterAction()
     }
 
     @objc func hideRepo(_ sender: NSMenuItem) {
         guard let fullName = self.repoFullName(from: sender) else { return }
+        self.requestMenuReopenAfterClose()
         Task { await self.appState.hide(fullName) }
-        self.reopenMenuAfterAction()
     }
 
     @objc func moveRepoUp(_ sender: NSMenuItem) {
+        self.requestMenuReopenAfterClose()
         self.moveRepo(sender: sender, direction: -1)
-        self.reopenMenuAfterAction()
     }
 
     @objc func moveRepoDown(_ sender: NSMenuItem) {
+        self.requestMenuReopenAfterClose()
         self.moveRepo(sender: sender, direction: 1)
-        self.reopenMenuAfterAction()
     }
 
     private func moveRepo(sender: NSMenuItem, direction: Int) {

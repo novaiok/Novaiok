@@ -42,6 +42,7 @@ final class StatusBarMenuManager: NSObject, NSMenuDelegate {
     private var lastMainMenuWidth: CGFloat?
     private var lastMainMenuSignature: MenuBuildSignature?
     private var lastMainMenuWidthSignature: MenuBuildSignature?
+    private var pendingMenuReopen = false
     var webURLBuilder: RepoWebURLBuilder { RepoWebURLBuilder(host: self.appState.session.settings.githubHost) }
     private weak var checkoutProgressWindow: NSWindow?
 
@@ -71,13 +72,8 @@ final class StatusBarMenuManager: NSObject, NSMenuDelegate {
         self.logMenuEvent("attachMainMenu statusItem=\(self.objectID(statusItem)) menuItems=\(menu.items.count)")
     }
 
-    /// Re-opens the menu after an action to keep it visible.
-    /// Call this from actions like hide/pin/unpin that shouldn't close the menu.
-    func reopenMenuAfterAction() {
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(50))
-            self.statusItem?.button?.performClick(nil)
-        }
+    func requestMenuReopenAfterClose() {
+        self.pendingMenuReopen = true
     }
 
     // MARK: - Menu actions
@@ -210,9 +206,21 @@ final class StatusBarMenuManager: NSObject, NSMenuDelegate {
 
     func menuDidClose(_ menu: NSMenu) {
         if menu === self.mainMenu {
+            let shouldReopen = self.pendingMenuReopen
+            self.pendingMenuReopen = false
             self.menuBuilder.clearHighlights(in: menu)
             self.stopObservingMenuResize()
             self.logMenuEvent("menuDidClose mainMenu")
+            if shouldReopen {
+                self.reopenMainMenu()
+            }
+        }
+    }
+
+    private func reopenMainMenu() {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(50))
+            self.statusItem?.button?.performClick(nil)
         }
     }
 
