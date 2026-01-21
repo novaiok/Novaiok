@@ -10,6 +10,7 @@
 - macOS: add token status checks + forced refresh buttons in Settings for debugging auth issues.
 - macOS: prevent token check/refresh from hanging; add timeouts and diagnostics logging.
 - macOS: detect auth failures (401/refresh errors) and log out cleanly with a clearer message.
+- macOS: preserve keychain access groups in signed builds so app + CLI share tokens (#16, thanks @jj3ny).
 - macOS: stabilize repo settings autocomplete (no spinner layout wiggle), widen the dropdown, show repo stats/badges, fix filtering/hover/scroll, and anchor/size the dropdown to results (no bounce on shrink).
 - macOS: widen Enterprise Base URL field and shrink auth progress indicators to avoid layout jumps.
 - iOS: update app icon + logo assets.
