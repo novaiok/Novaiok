@@ -436,6 +436,9 @@ struct LogoutCommand: CommanderRunnableCommand {
 struct ImportGHTokenCommand: CommanderRunnableCommand {
     nonisolated static let commandName = "import-gh-token"
 
+    @Option(name: .customLong("host"), help: "GitHub host (https://github.com or your GHE base URL)")
+    var host: String?
+
     static var commandDescription: CommandDescription {
         CommandDescription(
             commandName: commandName,
@@ -443,13 +446,27 @@ struct ImportGHTokenCommand: CommanderRunnableCommand {
         )
     }
 
-    mutating func bind(_: ParsedValues) throws {}
+    mutating func bind(_ values: ParsedValues) throws {
+        self.host = try values.decodeOption("host")
+    }
 
     mutating func run() async throws {
+        let store = SettingsStore()
+        var settings = store.load()
+        let rawHost: URL = if let host {
+            try parseHost(host)
+        } else {
+            settings.enterpriseHost ?? settings.githubHost
+        }
+        let normalizedHost = try OAuthLoginFlow.normalizeHost(rawHost)
+        guard let ghHostname = normalizedHost.host, ghHostname.isEmpty == false else {
+            throw ValidationError("Invalid host: \(rawHost.absoluteString)")
+        }
+
         // Get token from gh CLI
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = ["gh", "auth", "token"]
+        process.arguments = ["gh", "auth", "token", "--hostname", ghHostname]
         let pipe = Pipe()
         process.standardOutput = pipe
         process.standardError = FileHandle.nullDevice
@@ -471,17 +488,24 @@ struct ImportGHTokenCommand: CommanderRunnableCommand {
             throw ValidationError("No token returned from gh CLI. Please run 'gh auth login' first.")
         }
 
-        // Create tokens with 1-year expiry (gh tokens don't expire but we need a value)
-        let oneYearFromNow = Date().addingTimeInterval(365 * 24 * 60 * 60)
+        // gh tokens don't expire, so leave expiry unset and skip refresh.
         let tokens = OAuthTokens(
             accessToken: tokenString,
             refreshToken: "",
-            expiresAt: oneYearFromNow
+            expiresAt: nil
         )
 
         try TokenStore.shared.save(tokens: tokens)
+        settings.githubHost = RepoBarAuthDefaults.githubHost
+        if normalizedHost.host?.lowercased() == "github.com" {
+            settings.enterpriseHost = nil
+        } else {
+            settings.enterpriseHost = normalizedHost
+        }
+        store.save(settings)
+
         print("Successfully imported gh CLI token.")
-        print("Token expires: \(RelativeFormatter.string(from: oneYearFromNow, relativeTo: Date()))")
+        print("Token expires: unknown")
         print("\nNote: Re-run this command if your gh token changes or if you re-authenticate with 'gh auth login'.")
     }
 }

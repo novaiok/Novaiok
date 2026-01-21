@@ -16,6 +16,9 @@ public struct OAuthTokenRefresher: Sendable {
 
     public func refreshIfNeeded(host: URL, force: Bool = false) async throws -> OAuthTokens? {
         guard var tokens = try tokenStore.load() else { return nil }
+        if tokens.refreshToken.isEmpty {
+            return tokens
+        }
         if force == false, let expiry = tokens.expiresAt, expiry > Date().addingTimeInterval(60) {
             return tokens
         }

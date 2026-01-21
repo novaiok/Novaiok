@@ -118,6 +118,23 @@ struct OAuthTokenRefresherTests {
             #expect(message?.contains("refresh token revoked") == true)
         }
     }
+
+    @Test
+    func refreshSkipsWhenRefreshTokenMissing() async throws {
+        let service = "com.steipete.repobar.auth.tests.\(UUID().uuidString)"
+        let store = TokenStore(service: service)
+        defer { store.clear() }
+
+        let tokens = OAuthTokens(accessToken: "tok", refreshToken: "", expiresAt: nil)
+        try store.save(tokens: tokens)
+
+        let refresher = OAuthTokenRefresher(tokenStore: store) { _ in
+            throw URLError(.badServerResponse)
+        }
+
+        let refreshed = try await refresher.refreshIfNeeded(host: RepoBarAuthDefaults.githubHost)
+        #expect(refreshed == tokens)
+    }
 }
 
 private extension OAuthTokenRefresherTests {

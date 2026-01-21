@@ -13,6 +13,7 @@
 - macOS: preserve keychain access groups in signed builds so app + CLI share tokens (#16, thanks @jj3ny).
 - macOS: keep the menu open after pin/unpin/hide/move actions (#25, thanks @bahag-chaurasiak).
 - macOS: make Local Projects scan depth configurable (default 4) (#11, thanks @shunkakinoki).
+- macOS: allow importing GitHub CLI tokens with host matching and no refresh loop (#24, thanks @bahag-chaurasiak).
 - macOS: stabilize repo settings autocomplete (no spinner layout wiggle), widen the dropdown, show repo stats/badges, fix filtering/hover/scroll, and anchor/size the dropdown to results (no bounce on shrink).
 - macOS: widen Enterprise Base URL field and shrink auth progress indicators to avoid layout jumps.
 - iOS: update app icon + logo assets.

@@ -392,7 +392,7 @@ func printHelp(_ target: HelpTarget) {
           repobar settings set <key> <value> [--json] [--plain]
           repobar login [--host URL] [--client-id ID] [--client-secret SECRET] [--loopback-port PORT]
           repobar logout
-          repobar import-gh-token
+          repobar import-gh-token [--host URL]
           repobar status [--json]
 
         Options:
@@ -836,11 +836,14 @@ func printHelp(_ target: HelpTarget) {
         repobar import-gh-token - import token from GitHub CLI (gh)
 
         Usage:
-          repobar import-gh-token
+          repobar import-gh-token [--host URL]
 
         Imports the authentication token from GitHub CLI (gh) into RepoBar.
         This is useful for SSO-enabled organizations where you've already
         authorized the gh CLI but need to use that same access in RepoBar.
+
+        Options:
+          --host URL   GitHub host to import from (defaults to current settings)
 
         Prerequisites:
           - GitHub CLI must be installed (brew install gh)
