@@ -286,7 +286,7 @@ final class StatusBarMenuBuilder {
         let sorted = RepositoryPipeline.apply(baseRepos, query: query)
         let displayIndex = session.menuDisplayIndex
         let models = sorted.map { repo in
-            displayIndex[repo.fullName]
+            displayIndex[repo.fullName.lowercased()]
                 ?? RepositoryDisplayModel(
                     repo: repo,
                     localStatus: session.localRepoIndex.status(for: repo),
@@ -307,7 +307,7 @@ final class StatusBarMenuBuilder {
 
         var models: [RepositoryDisplayModel] = []
         for localStatus in localRepos {
-            if let fullName = localStatus.fullName,
+            if let fullName = localStatus.fullName?.lowercased(),
                let existingModel = displayIndex[fullName] {
                 models.append(existingModel)
             } else {

@@ -183,6 +183,35 @@ struct LocalProjectsServiceTests {
     }
 
     @Test
+    func localRepoIndex_prefersHigherHierarchyForDuplicateFullNames() {
+        let worktree = LocalRepoStatus(
+            path: URL(fileURLWithPath: "/tmp/Repo/.work/feature"),
+            name: "Repo",
+            fullName: "owner/Repo",
+            branch: "feature",
+            isClean: true,
+            aheadCount: 0,
+            behindCount: 0,
+            syncState: .synced,
+            worktreeName: "feature"
+        )
+        let root = LocalRepoStatus(
+            path: URL(fileURLWithPath: "/tmp/Repo"),
+            name: "Repo",
+            fullName: "owner/Repo",
+            branch: "main",
+            isClean: true,
+            aheadCount: 0,
+            behindCount: 0,
+            syncState: .synced
+        )
+        let index = LocalRepoIndex(statuses: [worktree, root])
+
+        let selected = index.status(forFullName: "OWNER/REPO")
+        #expect(selected?.path.path == root.path.path)
+    }
+
+    @Test
     func localRepoIndex_prefersPreferredPath() {
         let primary = LocalRepoStatus(
             path: URL(fileURLWithPath: "/tmp/repo-a"),

@@ -178,12 +178,12 @@ public struct LocalRepoIndex: Equatable, Sendable {
         // Use uniquingKeysWith to handle duplicate fullNames (e.g., worktrees sharing same remote)
         self.byFullName = Dictionary(
             statuses.compactMap { status in status.fullName.map { ($0, status) } },
-            uniquingKeysWith: { first, _ in first }
+            uniquingKeysWith: { first, second in Self.preferredStatus(first, second) }
         )
         // Use uniquingKeysWith to handle any duplicate paths
         self.byPath = Dictionary(
             statuses.map { ($0.path.path, $0) },
-            uniquingKeysWith: { first, _ in first }
+            uniquingKeysWith: { first, second in Self.preferredStatus(first, second) }
         )
         var nameIndex: [String: [LocalRepoStatus]] = [:]
         var nameIndexLowercased: [String: [LocalRepoStatus]] = [:]
@@ -205,7 +205,7 @@ public struct LocalRepoIndex: Equatable, Sendable {
             return status
         }
         if let exact = self.byFullName[repo.fullName] { return exact }
-        if let match = self.uniqueStatus(in: self.byFullNameLowercased, forKey: repo.fullName.lowercased()) {
+        if let match = self.preferredStatus(in: self.byFullNameLowercased, forKey: repo.fullName.lowercased()) {
             return match
         }
         return self.uniqueStatus(forName: repo.name)
@@ -216,7 +216,7 @@ public struct LocalRepoIndex: Equatable, Sendable {
             return status
         }
         if let exact = self.byFullName[fullName] { return exact }
-        if let match = self.uniqueStatus(in: self.byFullNameLowercased, forKey: fullName.lowercased()) {
+        if let match = self.preferredStatus(in: self.byFullNameLowercased, forKey: fullName.lowercased()) {
             return match
         }
         let name = fullName.split(separator: "/").last.map(String.init)
@@ -232,5 +232,21 @@ public struct LocalRepoIndex: Equatable, Sendable {
     private func uniqueStatus(in index: [String: [LocalRepoStatus]], forKey key: String) -> LocalRepoStatus? {
         guard let matches = index[key], matches.count == 1 else { return nil }
         return matches.first
+    }
+
+    private func preferredStatus(in index: [String: [LocalRepoStatus]], forKey key: String) -> LocalRepoStatus? {
+        guard let matches = index[key], matches.isEmpty == false else { return nil }
+        return matches.reduce(matches[0]) { current, candidate in
+            Self.preferredStatus(current, candidate)
+        }
+    }
+
+    private static func preferredStatus(_ lhs: LocalRepoStatus, _ rhs: LocalRepoStatus) -> LocalRepoStatus {
+        let lhsDepth = lhs.path.pathComponents.count
+        let rhsDepth = rhs.path.pathComponents.count
+        if lhsDepth != rhsDepth { return lhsDepth < rhsDepth ? lhs : rhs }
+        if lhs.worktreeName == nil, rhs.worktreeName != nil { return lhs }
+        if rhs.worktreeName == nil, lhs.worktreeName != nil { return rhs }
+        return lhs.path.path <= rhs.path.path ? lhs : rhs
     }
 }
