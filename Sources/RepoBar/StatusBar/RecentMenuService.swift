@@ -194,6 +194,20 @@ final class RecentMenuService {
         return hasher.finalize()
     }
 
+    /// Clears all in-memory caches to free memory.
+    func clearAllCaches() {
+        self.recentIssuesCache.clear()
+        self.recentPullRequestsCache.clear()
+        self.recentReleasesCache.clear()
+        self.recentWorkflowRunsCache.clear()
+        self.recentCommitsCache.clear()
+        self.recentDiscussionsCache.clear()
+        self.recentTagsCache.clear()
+        self.recentBranchesCache.clear()
+        self.recentContributorsCache.clear()
+        self.recentCommitCounts.removeAll()
+    }
+
     private func commitDescriptor() -> RecentMenuDescriptor {
         RecentMenuDescriptor(
             kind: .commits,
@@ -319,18 +333,29 @@ enum RecentMenuItems: Sendable {
     }
 }
 
+@MainActor
 final class RecentListCache<Item: Sendable> {
     struct Entry {
         var fetchedAt: Date
         var items: [Item]
     }
 
+    /// Maximum number of repository entries to retain per cache type.
+    private let maxEntries: Int
     private var entries: [String: Entry] = [:]
+    /// Tracks access order for LRU eviction (most recent at end)
+    private var accessOrder: [String] = []
     private var inflight: [String: Task<[Item], Error>] = [:]
+
+    init(maxEntries: Int = 50) {
+        self.maxEntries = maxEntries
+    }
 
     func cached(for key: String, now: Date, maxAge: TimeInterval) -> [Item]? {
         guard let entry = self.entries[key] else { return nil }
         guard now.timeIntervalSince(entry.fetchedAt) <= maxAge else { return nil }
+        // Move to end of access order (most recently used)
+        self.touchAccessOrder(key)
         return entry.items
     }
 
@@ -355,6 +380,39 @@ final class RecentListCache<Item: Sendable> {
     }
 
     func store(_ items: [Item], for key: String, fetchedAt: Date) {
+        let isNewKey = self.entries[key] == nil
+
+        if isNewKey {
+            // Only evict when inserting a new key
+            while self.entries.count >= self.maxEntries, let oldest = self.accessOrder.first {
+                self.accessOrder.removeFirst()
+                self.entries.removeValue(forKey: oldest)
+            }
+            self.accessOrder.append(key)
+        } else {
+            // Update existing key - move to end of access order
+            self.touchAccessOrder(key)
+        }
+
         self.entries[key] = Entry(fetchedAt: fetchedAt, items: items)
+    }
+
+    func clear() {
+        self.entries.removeAll()
+        self.accessOrder.removeAll()
+        self.inflight.values.forEach { $0.cancel() }
+        self.inflight.removeAll()
+    }
+
+    var count: Int {
+        self.entries.count
+    }
+
+    /// Moves key to end of access order (most recently used)
+    private func touchAccessOrder(_ key: String) {
+        if let index = self.accessOrder.firstIndex(of: key) {
+            self.accessOrder.remove(at: index)
+            self.accessOrder.append(key)
+        }
     }
 }

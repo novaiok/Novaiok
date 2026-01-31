@@ -1,17 +1,51 @@
 import Foundation
 
-/// Simple in-memory ETag cache keyed by URL string.
+/// Simple in-memory ETag cache keyed by URL string with LRU eviction.
 actor ETagCache {
+    /// Maximum number of entries to retain. Oldest entries are evicted when exceeded.
+    private let maxEntries: Int
+
     private var store: [String: (etag: String, data: Data)] = [:]
+    /// Tracks access order for LRU eviction (most recent at end)
+    private var accessOrder: [String] = []
     private var rateLimitedUntil: Date?
 
+    init(maxEntries: Int = 200) {
+        self.maxEntries = maxEntries
+    }
+
     func cached(for url: URL) -> (etag: String, data: Data)? {
-        self.store[url.absoluteString]
+        let key = url.absoluteString
+        guard let value = self.store[key] else { return nil }
+        // Move to end of access order (most recently used)
+        if let index = self.accessOrder.firstIndex(of: key) {
+            self.accessOrder.remove(at: index)
+            self.accessOrder.append(key)
+        }
+        return value
     }
 
     func save(url: URL, etag: String?, data: Data) {
         guard let etag else { return }
-        self.store[url.absoluteString] = (etag, data)
+        let key = url.absoluteString
+        let isNewKey = self.store[key] == nil
+
+        if isNewKey {
+            // Only evict when inserting a new key
+            while self.store.count >= self.maxEntries, let oldest = self.accessOrder.first {
+                self.accessOrder.removeFirst()
+                self.store.removeValue(forKey: oldest)
+            }
+            self.accessOrder.append(key)
+        } else {
+            // Update existing key - move to end of access order
+            if let index = self.accessOrder.firstIndex(of: key) {
+                self.accessOrder.remove(at: index)
+                self.accessOrder.append(key)
+            }
+        }
+
+        self.store[key] = (etag, data)
     }
 
     func setRateLimitReset(date: Date) {
@@ -34,6 +68,7 @@ actor ETagCache {
 
     func clear() {
         self.store.removeAll()
+        self.accessOrder.removeAll()
         self.rateLimitedUntil = nil
     }
 
