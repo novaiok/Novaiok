@@ -28,22 +28,24 @@ actor ETagCache {
     func save(url: URL, etag: String?, data: Data) {
         guard let etag else { return }
         let key = url.absoluteString
+        let isNewKey = self.store[key] == nil
 
-        // If key already exists, remove from access order (will re-add at end)
-        if self.store[key] != nil {
+        if isNewKey {
+            // Only evict when inserting a new key
+            while self.store.count >= self.maxEntries, let oldest = self.accessOrder.first {
+                self.accessOrder.removeFirst()
+                self.store.removeValue(forKey: oldest)
+            }
+            self.accessOrder.append(key)
+        } else {
+            // Update existing key - move to end of access order
             if let index = self.accessOrder.firstIndex(of: key) {
                 self.accessOrder.remove(at: index)
+                self.accessOrder.append(key)
             }
         }
 
-        // Evict oldest entries if at capacity
-        while self.store.count >= self.maxEntries, let oldest = self.accessOrder.first {
-            self.accessOrder.removeFirst()
-            self.store.removeValue(forKey: oldest)
-        }
-
         self.store[key] = (etag, data)
-        self.accessOrder.append(key)
     }
 
     func setRateLimitReset(date: Date) {
