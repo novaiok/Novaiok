@@ -1,5 +1,8 @@
 # RepoBar — GitHub at a glance from your menu bar
 
+![GitHub Repo Banner](https://ghrb.waren.build/banner?header=RepoBar%F0%9F%92%BB&subheader=GitHub+at+a+glance+from+your+menu+bar&bg=1a1a1a-4a4a4a&color=ffffff&support=true)
+<!-- Created with GitHub Repo Banner by Waren Gonzaga: https://ghrb.waren.build -->
+
 RepoBar keeps your GitHub work in view without opening a browser. Pin the repos you care about and get a clear, glanceable dashboard for CI, releases, traffic, and activity right from the macOS menu bar.
 
 ![RepoBar screenshot](docs/assets/repobar.png)
