@@ -9,7 +9,7 @@ CI status • Releases • Activity & traffic • Local Git state
 Homebrew (recommended):
 
 ```bash
-brew install --cask steipete/tap/repobar
+brew install --cask repobar
 ```
 
 Direct download: [latest release](https://github.com/steipete/RepoBar/releases/latest)
