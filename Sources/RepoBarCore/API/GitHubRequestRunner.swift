@@ -52,7 +52,7 @@ actor GitHubRequestRunner {
             await self.diag.message("Cooldown active for \(url.absoluteString) until \(cooldown)")
             throw GitHubAPIError.serviceUnavailable(
                 retryAfter: cooldown,
-                message: "Cooling down until \(RelativeFormatter.string(from: cooldown, relativeTo: Date()))."
+                message: "Cooldown active; retry \(RelativeFormatter.string(from: cooldown, relativeTo: Date()))."
             )
         }
 
