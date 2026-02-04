@@ -14,6 +14,11 @@ brew install --cask steipete/tap/repobar
 
 Direct download: [latest release](https://github.com/steipete/RepoBar/releases/latest)
 
+N.B. you may need to re-sign the brew installed binary to allow it to run locally : 
+```
+sudo codesign --force --deep --sign - /Applications/RepoBar.app
+```
+
 ## Features
 
 - Live repo cards with CI status, activity preview, releases, and rate-limit awareness.
