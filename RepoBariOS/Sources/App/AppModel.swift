@@ -292,7 +292,7 @@ final class AppModel {
     }
 
     private func mergeHydrated(_ detailed: [Repository], into repos: [Repository]) -> [Repository] {
-        let lookup = Dictionary(uniqueKeysWithValues: detailed.map { ($0.fullName, $0) })
+        let lookup = Dictionary(detailed.map { ($0.fullName, $0) }, uniquingKeysWith: { _, latest in latest })
         return repos.map { lookup[$0.fullName] ?? $0 }
     }
 

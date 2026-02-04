@@ -262,7 +262,7 @@ extension AppState {
     }
 
     private func mergeHydrated(_ detailed: [Repository], into repos: [Repository]) -> [Repository] {
-        let lookup = Dictionary(detailed.map { ($0.fullName, $0) }, uniquingKeysWith: { first, _ in first })
+        let lookup = Dictionary(detailed.map { ($0.fullName, $0) }, uniquingKeysWith: { _, latest in latest })
         return repos.map { lookup[$0.fullName] ?? $0 }
     }
 
@@ -282,7 +282,7 @@ extension AppState {
         let models = repos.map { repo in
             RepositoryDisplayModel(repo: repo, localStatus: localIndex.status(for: repo), now: now)
         }
-        let index = Dictionary(models.map { ($0.title.lowercased(), $0) }, uniquingKeysWith: { first, _ in first })
+        let index = Dictionary(models.map { ($0.title.lowercased(), $0) }, uniquingKeysWith: { _, latest in latest })
         await MainActor.run {
             self.session.menuDisplayIndex = index
         }
@@ -320,7 +320,7 @@ extension AppState {
                         now: capturedAt
                     )
                 }
-                self.session.menuDisplayIndex = Dictionary(models.map { ($0.title.lowercased(), $0) }, uniquingKeysWith: { first, _ in first })
+                self.session.menuDisplayIndex = Dictionary(models.map { ($0.title.lowercased(), $0) }, uniquingKeysWith: { _, latest in latest })
             }
         }
     }
