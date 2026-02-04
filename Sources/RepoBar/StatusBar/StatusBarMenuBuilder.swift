@@ -180,9 +180,16 @@ final class StatusBarMenuBuilder {
                     .padding(.vertical, MenuStyle.sectionVerticalPadding)
                 return [self.viewItem(for: emptyState, enabled: false)]
             }
-            var items: [NSMenuItem] = []
+            // Deduplicate repos by id to prevent adding the same cached menu item twice
+            // (which would crash with "Item to be inserted into menu already is in another menu")
             var usedRepoKeys: Set<String> = []
-            for (index, repo) in repos.enumerated() {
+            let uniqueRepos = repos.filter { repo in
+                if usedRepoKeys.contains(repo.id) { return false }
+                usedRepoKeys.insert(repo.id)
+                return true
+            }
+            var items: [NSMenuItem] = []
+            for (index, repo) in uniqueRepos.enumerated() {
                 let isPinned = settings.repoList.pinnedRepositories.contains {
                     $0.trimmingCharacters(in: .whitespacesAndNewlines)
                         .caseInsensitiveCompare(repo.title) == .orderedSame
@@ -190,10 +197,9 @@ final class StatusBarMenuBuilder {
                 let item = self.repoMenuItem(for: repo, isPinned: isPinned)
                 item.representedObject = repo.title
                 items.append(item)
-                if index < repos.count - 1 {
+                if index < uniqueRepos.count - 1 {
                     items.append(self.repoCardSeparator())
                 }
-                usedRepoKeys.insert(repo.id)
             }
             self.repoMenuItemCache = self.repoMenuItemCache.filter { usedRepoKeys.contains($0.key) }
             self.repoSubmenuCache = self.repoSubmenuCache.filter { usedRepoKeys.contains($0.key) }
