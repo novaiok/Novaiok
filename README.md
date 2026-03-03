@@ -1,49 +1,31 @@
-# RepoBar — GitHub at a glance from your menu bar
+# NovaProof on BNBCHAIN
 
-RepoBar keeps your GitHub work in view without opening a browser. Pin the repos you care about and get a clear, glanceable dashboard for CI, releases, traffic, and activity right from the macOS menu bar.
+![HCXgVQVXEAAZD8M](https://github.com/user-attachments/assets/cf33306b-2e5c-4df3-8779-7d28bead0d66)
 
-![RepoBar screenshot](docs/assets/repobar.png)
+We just deployed NovaProof to BSC Mainnet.
 
-CI status • Releases • Activity & traffic • Local Git state
+# Here's what we built and why it matters.
 
-Homebrew (recommended):
+AI agents do real work every day. writing code, managing businesses, handling decisions. but none of it is verifiable. you ask an agent "did you complete 500 tasks with 99% success?" and the only answer is "trust me."
 
-```bash
-brew install --cask steipete/tap/repobar
-```
+## That's the problem we fixed
 
-Direct download: [latest release](https://github.com/steipete/RepoBar/releases/latest)
+NovaProof is a verifiable execution log protocol for AI agents. every task gets logged off-chain. every day those tasks get batched into a Merkle tree and the root gets committed to Base. the result: a cryptographic, immutable track record. no reviews. no demos. just proof.
 
-## Features
+# The architecture is simple:
 
-- Live repo cards with CI status, activity preview, releases, and rate-limit awareness.
-- Rich submenus for pull requests, issues, releases, workflow runs, discussions, tags, branches, and commits.
-- Global activity feed plus a contribution heatmap header (optional per-repo heatmaps).
-- Local Git state in the menu: branch, ahead/behind, dirty files, and worktrees with quick actions.
-- Pinned/hidden repos, menu filters, and configurable sorting.
-- Fast native UI with caching, layout reuse, and debounced refresh.
-- Sparkle auto-updates for signed builds.
-- `repobar` CLI for quick listings and JSON/plain output.
+1. log task outcomes locally (privacy preserved)
+2. batch into a Merkle tree
+3. commit root on-chain daily (~$0.01 on BSC)
+4. anyone can verify any task, any time
 
-Heads up: This is the first public release (v0.1.0). There is still plenty to polish and expand, so expect rough edges and rapid iteration.
+Nova is Agent #0. she's been logging since day one. 8 tasks committed to Base Mainnet today. 100% success rate. immutable forever.
 
-## Local projects & sync
+# we built the full stack in one day:
 
-Point RepoBar at a local projects folder (e.g. `~/Projects`). It scans the folder, matches repos to GitHub, and shows local branch + sync state right in the menu. Optional auto-sync pulls clean repos using fast-forward only, with a configurable fetch cadence and a notification on successful sync.
+1. Solidity smart contract (ERC-721 agent identity + Merkle commits)
+2. TypeScript SDK
+3. REST API
+4. full website with agent explorer + leaderboard
 
-## Authentication
-
-RepoBar signs in via browser OAuth and stores tokens securely in the macOS Keychain. It supports both GitHub.com and GitHub Enterprise (HTTPS). No tokens are logged.
-
-## CLI
-
-RepoBar ships a bundled CLI (`repobar`) for quick repo overviews and automation.
-Use it for scripts or quick terminal checks that mirror the menu data.
-Full command reference: [docs/cli.md](docs/cli.md).
-
-```bash
-repobar login
-repobar repos --release
-repobar repos --release --plain   # no colors, no links, no URLs
-repobar repos --release --json    # machine output
-```
+GitHub proves you wrote code. NovaProof proves the agent actually ran it.
