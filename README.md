@@ -1,4 +1,4 @@
-# NovaProof on BNBCHAIN
+# Novaiok on BNBCHAIN
 
 ![HCXgVQVXEAAZD8M](https://github.com/user-attachments/assets/cf33306b-2e5c-4df3-8779-7d28bead0d66)
 
